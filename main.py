@@ -44,11 +44,13 @@ data_test = CIFAR10(args.data,
                   train=False,
                   transform=transform_test)
 
-data_train_loader = DataLoader(data_train, batch_size=256, shuffle=True, num_workers=8)
+data_train_loader = DataLoader(data_train, batch_size=64, shuffle=True, num_workers=8)
 data_test_loader = DataLoader(data_test, batch_size=100, num_workers=0)
 
-net = resnet20().cuda()
-criterion = torch.nn.CrossEntropyLoss().cuda()
+net = resnet20()
+if torch.cuda.is_available():
+    net.cuda()
+criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(net.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
 
 def adjust_learning_rate(optimizer, epoch):
@@ -63,8 +65,9 @@ def train(epoch):
     net.train()
     loss_list, batch_list = [], []
     for i, (images, labels) in enumerate(data_train_loader):
-        images, labels = Variable(images).cuda(), Variable(labels).cuda()
- 
+        images, labels = Variable(images), Variable(labels)
+        if torch.cuda.is_available():
+            images,labels = images.cuda(),labels.cuda()
         optimizer.zero_grad()
  
         output = net(images)
@@ -88,7 +91,9 @@ def test():
     avg_loss = 0.0
     with torch.no_grad():
         for i, (images, labels) in enumerate(data_test_loader):
-            images, labels = Variable(images).cuda(), Variable(labels).cuda()
+            images, labels = Variable(images), Variable(labels)
+            if torch.cuda.is_available():
+                images,labels = images.cuda(),labels.cuda()
             output = net(images)
             avg_loss += criterion(output, labels).sum()
             pred = output.data.max(1)[1]
