@@ -17,10 +17,12 @@ import math
 parser = argparse.ArgumentParser(description='train-addernet')
 
 # Basic model parameters.
-parser.add_argument('--data', type=str, default='/cache/data/')
-parser.add_argument('--output_dir', type=str, default='/cache/models/')
+parser.add_argument('--data', type=str, default='./cache/data/')
+parser.add_argument('--output_dir', type=str, default='./cache/models/')
+parser.add_argument('--epoch',type=int,default=50)
+parser.add_argument('--log',type=str,default='./train.log')
 args = parser.parse_args()
-
+log_dir = args.log
 os.makedirs(args.output_dir, exist_ok=True)  
 
 acc = 0
@@ -61,7 +63,7 @@ def adjust_learning_rate(optimizer, epoch):
         
 def train(epoch):
     adjust_learning_rate(optimizer, epoch)
-    global cur_batch_win
+    global cur_batch_win,log_dir
     net.train()
     loss_list, batch_list = [], []
     for i, (images, labels) in enumerate(data_train_loader):
@@ -79,13 +81,14 @@ def train(epoch):
  
         if i == 1:
             print('Train - Epoch %d, Batch: %d, Loss: %f' % (epoch, i, loss.data.item()))
- 
+    
         loss.backward()
         optimizer.step()
- 
+        with open(log_dir,'a+') as f:
+            f.write('Train - Epoch %d, Batch: %d, Loss: %f' % (epoch, i, loss.data.item()))
  
 def test():
-    global acc, acc_best
+    global acc, acc_best,log_dir
     net.eval()
     total_correct = 0
     avg_loss = 0.0
@@ -104,6 +107,8 @@ def test():
     if acc_best < acc:
         acc_best = acc
     print('Test Avg. Loss: %f, Accuracy: %f' % (avg_loss.data.item(), acc))
+    with open(log_dir,'a+') as f:
+        f.write('Test Avg. Loss: %f, Accuracy: %f \n\n' % (avg_loss.data.item(), acc))
  
  
 def train_and_test(epoch):
@@ -112,7 +117,7 @@ def train_and_test(epoch):
  
  
 def main():
-    epoch = 400
+    epoch = args.epoch
     for e in range(1, epoch):
         train_and_test(e)
     torch.save(net,args.output_dir + 'addernet')
