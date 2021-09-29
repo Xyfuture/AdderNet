@@ -21,6 +21,7 @@ parser.add_argument('--data', type=str, default='./cache/data/')
 parser.add_argument('--output_dir', type=str, default='./cache/models/')
 parser.add_argument('--epoch',type=int,default=50)
 parser.add_argument('--log',type=str,default='./train.log')
+parser.add_argument('--batch',type=int,default=64)
 args = parser.parse_args()
 log_dir = args.log
 os.makedirs(args.output_dir, exist_ok=True)  
@@ -46,7 +47,7 @@ data_test = CIFAR10(args.data,
                   train=False,
                   transform=transform_test)
 
-data_train_loader = DataLoader(data_train, batch_size=64, shuffle=True, num_workers=8)
+data_train_loader = DataLoader(data_train, batch_size=args.batch, shuffle=True, num_workers=8)
 data_test_loader = DataLoader(data_test, batch_size=100, num_workers=0)
 
 net = resnet20()
